@@ -28,7 +28,7 @@ type ListingCancelled @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type ListingCreated @entity(immutable: true) {
+type ListingCreated @entity(immutable: false) {
   id: Bytes!
   listingId: BigInt! # uint256
   nftContract: Bytes! # address
@@ -43,6 +43,7 @@ type ListingCreated @entity(immutable: true) {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  cancelTxHash: Bytes
 }
 
 type MerkleRootUpdated @entity(immutable: true) {

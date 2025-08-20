@@ -1,3 +1,4 @@
+import { Bytes, BigInt } from "@graphprotocol/graph-ts"
 import {
   EIP712DomainChanged as EIP712DomainChangedEvent,
   FeeReceiverUpdated as FeeReceiverUpdatedEvent,
@@ -71,11 +72,17 @@ export function handleListingCancelled(event: ListingCancelledEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+
+  let listing = ListingCreated.load(bigIntTo8Bytes(event.params.listingId))
+  if (listing) {
+    listing.cancelTxHash = event.transaction.hash
+    listing.save()
+  }
 }
 
 export function handleListingCreated(event: ListingCreatedEvent): void {
   let entity = new ListingCreated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
+    bigIntTo8Bytes(event.params.listingId)
   )
   entity.listingId = event.params.listingId
   entity.nftContract = event.params.nftContract
@@ -93,6 +100,18 @@ export function handleListingCreated(event: ListingCreatedEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+}
+
+// Utility function to convert BigInt to 8-byte Bytes
+function bigIntTo8Bytes(value: BigInt): Bytes {
+  let valueBytes = Bytes.fromBigInt(value)
+  // Ensure exactly 8 bytes by padding with zeros if necessary
+  let paddedBytes = new Uint8Array(8)
+  let sourceBytes = valueBytes.reverse() // Little endian to big endian
+  for (let i = 0; i < sourceBytes.length && i < 8; i++) {
+    paddedBytes[8 - sourceBytes.length + i] = sourceBytes[i]
+  }
+  return Bytes.fromUint8Array(paddedBytes)
 }
 
 export function handleMerkleRootUpdated(event: MerkleRootUpdatedEvent): void {
